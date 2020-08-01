@@ -144,17 +144,20 @@ if __name__ == "__main__":
                 tensorboard_log += [("loss", loss.item())]
                 logger.list_of_scalars_summary(tensorboard_log, batches_done)
 
-            log_str += AsciiTable(metric_table).table
-            log_str += f"\nTotal loss {loss.item()}"
-
-            # Determine approximate time left for epoch
-            epoch_batches_left = len(dataloader) - (batch_i + 1)
-            time_left = datetime.timedelta(seconds=epoch_batches_left * (time.time() - start_time) / (batch_i + 1))
-            log_str += f"\n---- ETA {time_left}"
-
-            print(log_str)
-
             model.seen += imgs.size(0)
+
+        # Logging the table after the final batch for each epoch
+        log_str += AsciiTable(metric_table).table
+        log_str += f"\nTotal loss {loss.item()}"
+
+        # Determine approximate time left for epoch
+        epoch_batches_left = len(dataloader) - (batch_i + 1)
+        time_left = datetime.timedelta(seconds=epoch_batches_left * (time.time() - start_time) / (batch_i + 1))
+        log_str += f"\n---- ETA {time_left}"
+
+        print(log_str)
+
+        # Performing evaluation after each Epoch
 
         if epoch % FLAGS.evaluation_interval == 0:
             print("\n---- Evaluating Model ----")
