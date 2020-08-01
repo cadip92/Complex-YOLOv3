@@ -1,6 +1,6 @@
 {
   "epochs": 300,
-  "batch_size": 50,
+  "batch_size": 5,
   "gradient_accumulations": 2,
   "model_def": "config/complex_yolov3.cfg",
   "pretrained_weights": "checkpoints/yolov3_ckpt_epoch-298.pth",

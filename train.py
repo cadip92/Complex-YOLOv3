@@ -56,6 +56,10 @@ if __name__ == "__main__":
         else:
             model.load_darknet_weights(FLAGS.pretrained_weights)
 
+    # No.of parameters in the model
+    pytorch_total_params = sum(p.numel() for p in model.parameters())
+    print("Total parameters : ", pytorch_total_params, " or ~%.2fM parameters" % (pytorch_total_params/1000000.0))
+
     # Get dataloader
     dataset = KittiYOLODataset(
         cnf.root_dir,
@@ -160,7 +164,7 @@ if __name__ == "__main__":
                 iou_thres=0.5,
                 conf_thres=0.5,
                 nms_thres=0.5,
-                img_size=FLAGS.img_size,
+                img_size=cnf.BEV_WIDTH,
                 batch_size=8,
             )
             evaluation_metrics = [
