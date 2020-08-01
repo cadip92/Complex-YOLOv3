@@ -140,8 +140,8 @@ class YOLOLayer(nn.Module):
         grid_size = x.size(2)
 
         prediction = (
-            x.view(num_samples, self.num_anchors, self.num_classes + 7, grid_size, grid_size)
-            .permute(0, 1, 3, 4, 2)
+            x.view(num_samples, self.num_anchors, self.num_classes + 7, grid_size, grid_size)   # Reshaping the Tensor
+            .permute(0, 1, 3, 4, 2)                                                             # Transpose the Tensor
             .contiguous()
         )
 

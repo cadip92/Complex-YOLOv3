@@ -5,9 +5,11 @@ from utils.logger import *
 from utils.utils import *
 from utils.kitti_yolo_dataset import KittiYOLODataset
 from eval_mAP import evaluate
+from easydict import EasyDict as edict
+from pprint import pprint
 
 from terminaltables import AsciiTable
-import os, sys, time, datetime, argparse
+import os, sys, time, datetime, argparse, json
 
 import torch
 from torch.utils.data import DataLoader
@@ -16,17 +18,27 @@ import torch.optim as optim
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epochs", type=int, default=300, help="number of epochs")
-    parser.add_argument("--batch_size", type=int, default=4, help="size of each image batch")
-    parser.add_argument("--gradient_accumulations", type=int, default=2, help="number of gradient accums before step")
-    parser.add_argument("--model_def", type=str, default="config/complex_yolov3.cfg", help="path to model definition file")
-    parser.add_argument("--pretrained_weights", type=str, help="if specified starts from checkpoint model")
-    parser.add_argument("--n_cpu", type=int, default=8, help="number of cpu threads to use during batch generation")
-    parser.add_argument("--img_size", type=int, default=cnf.BEV_WIDTH, help="size of each image dimension")
-    parser.add_argument("--evaluation_interval", type=int, default=2, help="interval evaluations on validation set")
-    parser.add_argument("--multiscale_training", default=True, help="allow for multi-scale training")
-    opt = parser.parse_args()
-    print(opt)
+    parser.add_argument('--config', default=None, type=str, help='Configuration file')
+    parser = parser.parse_args()
+
+    try:
+        if parser.config is not None:
+            with open(parser.config, 'r') as config_file:
+                config_args_dict = json.load(config_file)
+        else:
+            print("Add a config file using \'--config file_name.json\'", file=sys.stderr)
+            exit(1)
+
+    except FileNotFoundError:
+        print("ERROR: Config file not found: {}".format(parser.config), file=sys.stderr)
+        exit(1)
+    except json.decoder.JSONDecodeError:
+        print("ERROR: Config file is not a proper JSON file!", file=sys.stderr)
+        exit(1)
+
+    FLAGS = edict(config_args_dict)
+
+    pprint(FLAGS)
 
     logger = Logger("logs")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -34,15 +46,15 @@ if __name__ == "__main__":
     class_names = load_classes("data/classes.names")
 
     # Initiate model
-    model = Darknet(opt.model_def, img_size=opt.img_size).to(device)
+    model = Darknet(FLAGS.model_def, img_size=cnf.BEV_WIDTH).to(device)
     model.apply(weights_init_normal)
 
     # If specified we start from checkpoint
-    if opt.pretrained_weights:
-        if opt.pretrained_weights.endswith(".pth"):
-            model.load_state_dict(torch.load(opt.pretrained_weights))
+    if FLAGS.pretrained_weights:
+        if FLAGS.pretrained_weights.endswith(".pth"):
+            model.load_state_dict(torch.load(FLAGS.pretrained_weights))
         else:
-            model.load_darknet_weights(opt.pretrained_weights)
+            model.load_darknet_weights(FLAGS.pretrained_weights)
 
     # Get dataloader
     dataset = KittiYOLODataset(
@@ -51,19 +63,19 @@ if __name__ == "__main__":
         mode='TRAIN',
         folder='training',
         data_aug=True,
-        multiscale=opt.multiscale_training
+        multiscale=FLAGS.multiscale_training
     )
 
     dataloader = DataLoader(
         dataset,
-        opt.batch_size,
+        FLAGS.batch_size,
         shuffle=True,
-        num_workers=opt.n_cpu,
+        num_workers=FLAGS.n_cpu,
         pin_memory=True,
         collate_fn=dataset.collate_fn
     )
 
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = optim.Adam(model.parameters())
 
     metrics = [
         "grid_size",
@@ -85,7 +97,7 @@ if __name__ == "__main__":
     ]
 
     max_mAP = 0.0
-    for epoch in range(0, opt.epochs, 1):
+    for epoch in range(0, FLAGS.epochs, 1):
         model.train()
         start_time = time.time()
 
@@ -98,7 +110,7 @@ if __name__ == "__main__":
             loss, outputs = model(imgs, targets)
             loss.backward()
 
-            if batches_done % opt.gradient_accumulations:
+            if batches_done % FLAGS.gradient_accumulations:
                 # Accumulates gradient before each step
                 optimizer.step()
                 optimizer.zero_grad()
@@ -107,7 +119,7 @@ if __name__ == "__main__":
             #   Log progress
             # ----------------
 
-            log_str = "\n---- [Epoch %d/%d, Batch %d/%d] ----\n" % (epoch, opt.epochs, batch_i, len(dataloader))
+            log_str = "\n---- [Epoch %d/%d, Batch %d/%d] ----\n" % (epoch, FLAGS.epochs, batch_i, len(dataloader))
 
             metric_table = [["Metrics", *[f"YOLO Layer {i}" for i in range(len(model.yolo_layers))]]]
 
@@ -140,7 +152,7 @@ if __name__ == "__main__":
 
             model.seen += imgs.size(0)
 
-        if epoch % opt.evaluation_interval == 0:
+        if epoch % FLAGS.evaluation_interval == 0:
             print("\n---- Evaluating Model ----")
             # Evaluate the model on the validation set
             precision, recall, AP, f1, ap_class = evaluate(
@@ -148,7 +160,7 @@ if __name__ == "__main__":
                 iou_thres=0.5,
                 conf_thres=0.5,
                 nms_thres=0.5,
-                img_size=opt.img_size,
+                img_size=FLAGS.img_size,
                 batch_size=8,
             )
             evaluation_metrics = [
@@ -166,7 +178,7 @@ if __name__ == "__main__":
             print(AsciiTable(ap_table).table)
             print(f"---- mAP {AP.mean()}")
     
-            #if epoch % opt.checkpoint_interval == 0:
+            #if epoch % FLAGS.checkpoint_interval == 0:
             if AP.mean() > max_mAP:
                 torch.save(model.state_dict(), f"checkpoints/yolov3_ckpt_epoch-%d_MAP-%.2f.pth" % (epoch, AP.mean()))
                 max_mAP = AP.mean()
