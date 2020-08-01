@@ -50,7 +50,7 @@ if __name__ == "__main__":
     model.apply(weights_init_normal)
 
     # If specified we start from checkpoint
-    if FLAGS.pretrained_weights:
+    if FLAGS.pretrained_weights != "":
         if FLAGS.pretrained_weights.endswith(".pth"):
             model.load_state_dict(torch.load(FLAGS.pretrained_weights))
         else:
@@ -158,7 +158,7 @@ if __name__ == "__main__":
 
         print(log_str)
 
-        # Performing evaluation after each Epoch
+        # Performing evaluation after every 2 Epochs
 
         if epoch % FLAGS.evaluation_interval == 0:
             print("\n---- Evaluating Model ----")
