@@ -188,6 +188,6 @@ if __name__ == "__main__":
     
             #if epoch % FLAGS.checkpoint_interval == 0:
             if AP.mean() > max_mAP:
-                print("Saving this model")
-                torch.save(model.state_dict(), f"checkpoints/yolov3_ckpt_epoch-%d_MAP-%.2f.pth" % (epoch, AP.mean()))
+                print("Saving model. Epoch No. %d" % epoch)
+                torch.save(model.state_dict(), f"checkpoints/yolov3_ckpt.pth")
                 max_mAP = AP.mean()
