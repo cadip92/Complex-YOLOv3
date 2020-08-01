@@ -105,7 +105,8 @@ if __name__ == "__main__":
         model.train()
         start_time = time.time()
 
-        for batch_i, (_, imgs, targets) in enumerate(dataloader):
+        # Print batch progress as a Progress Bar
+        for batch_i, (_, imgs, targets) in enumerate(tqdm.tqdm(dataloader, desc="Training for epoch %d started" %epoch)):
             batches_done = len(dataloader) * epoch + batch_i
 
             imgs = Variable(imgs.to(device))
@@ -187,5 +188,6 @@ if __name__ == "__main__":
     
             #if epoch % FLAGS.checkpoint_interval == 0:
             if AP.mean() > max_mAP:
+                print("Saving this model")
                 torch.save(model.state_dict(), f"checkpoints/yolov3_ckpt_epoch-%d_MAP-%.2f.pth" % (epoch, AP.mean()))
                 max_mAP = AP.mean()
