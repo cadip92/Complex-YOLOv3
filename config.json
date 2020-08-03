@@ -1,6 +1,6 @@
 {
   "epochs": 100,
-  "batch_size": 10,
+  "batch_size": 5,
   "gradient_accumulations": 2,
   "model_def": "config/dep_sep.cfg",
   "pretrained_weights": "",
