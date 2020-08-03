@@ -1,10 +1,11 @@
 {
-  "epochs": 300,
-  "batch_size": 5,
+  "epochs": 100,
+  "batch_size": 10,
   "gradient_accumulations": 2,
-  "model_def": "config/complex_yolov3.cfg",
-  "pretrained_weights": "checkpoints/yolov3_ckpt_epoch-298.pth",
+  "model_def": "config/dep_sep.cfg",
+  "pretrained_weights": "",
   "n_cpu": 8,
   "evaluation_interval": 2,
-  "multiscale_training": true
+  "multiscale_training": true,
+  "checkpoint_file": "checkpoints/yolov3_ckpt.pth"
 }

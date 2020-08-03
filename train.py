@@ -38,6 +38,10 @@ if __name__ == "__main__":
 
     FLAGS = edict(config_args_dict)
 
+    if FLAGS.checkpoint_file == "":
+        print("ERROR: Checkpoint file is not specified", file=sys.stderr)
+        exit(1)
+
     pprint(FLAGS)
 
     logger = Logger("logs")
@@ -185,9 +189,9 @@ if __name__ == "__main__":
                 ap_table += [[c, class_names[c], "%.5f" % AP[i]]]
             print(AsciiTable(ap_table).table)
             print(f"---- mAP {AP.mean()}")
-    
+
             #if epoch % FLAGS.checkpoint_interval == 0:
             if AP.mean() > max_mAP:
                 print("Saving model. Epoch No. %d" % epoch)
-                torch.save(model.state_dict(), f"checkpoints/yolov3_ckpt.pth")
+                torch.save(model.state_dict(), FLAGS.checkpoint_file)
                 max_mAP = AP.mean()
