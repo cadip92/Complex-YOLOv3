@@ -24,21 +24,64 @@ def create_modules(module_defs):
             filters = int(module_def["filters"])
             kernel_size = int(module_def["size"])
             pad = (kernel_size - 1) // 2
-            modules.add_module(
-                f"conv_{module_i}",
-                nn.Conv2d(
-                    in_channels=output_filters[-1],
-                    out_channels=filters,
-                    kernel_size=kernel_size,
-                    stride=int(module_def["stride"]),
-                    padding=pad,
-                    bias=not bn,
-                ),
-            )
+            modules.add_module(f"conv_{module_i}",
+                               nn.Conv2d(
+                                   in_channels=output_filters[-1],
+                                   out_channels=filters,
+                                   kernel_size=kernel_size,
+                                   stride=int(module_def["stride"]),
+                                   padding=pad,
+                                   bias=not bn,
+                               ),
+                               )
             if bn:
                 modules.add_module(f"batch_norm_{module_i}", nn.BatchNorm2d(filters, momentum=0.9, eps=1e-5))
             if module_def["activation"] == "leaky":
                 modules.add_module(f"leaky_{module_i}", nn.LeakyReLU(0.1))
+
+        ##############################################################
+        # Adding depthwise-seperable convolution
+        elif module_def["type"] == "dep_sep_convolutional":
+            bn = int(module_def["batch_normalize"])
+            filters = int(module_def["filters"])
+            kernel_size = int(module_def["size"])
+            pad = (kernel_size - 1) // 2
+            # Depth-wise Convolution
+            modules.add_module(f"dep_conv_{module_i}",
+                               nn.Conv2d(
+                                   in_channels=output_filters[-1],
+                                   out_channels=output_filters[-1],
+                                   kernel_size=kernel_size,
+                                   stride=int(module_def["stride"]),
+                                   padding=pad,
+                                   bias=not bn,
+                                   groups=output_filters[-1],
+                               ),
+                               )
+            if bn:
+                modules.add_module(f"batch_norm_d_{module_i}",
+                                   nn.BatchNorm2d(output_filters[-1],
+                                   momentum=0.9,
+                                   eps=1e-5))
+
+            # Point-wise Convolution
+            modules.add_module(f"point_conv_{module_i}",
+                               nn.Conv2d(
+                                   in_channels=output_filters[-1],
+                                   out_channels=filters,
+                                   kernel_size=1,
+                                   bias=not bn,
+                               ),
+                               )
+            if bn:
+                modules.add_module(f"batch_norm_p_{module_i}",
+                                   nn.BatchNorm2d(filters,
+                                   momentum=0.9,
+                                   eps=1e-5))
+
+            if module_def["activation"] == "leaky":
+                modules.add_module(f"leaky_{module_i}", nn.LeakyReLU(0.1))
+        #############################################################
 
         elif module_def["type"] == "maxpool":
             kernel_size = int(module_def["size"])
@@ -255,7 +298,7 @@ class Darknet(nn.Module):
         loss = 0
         layer_outputs, yolo_outputs = [], []
         for i, (module_def, module) in enumerate(zip(self.module_defs, self.module_list)):
-            if module_def["type"] in ["convolutional", "upsample", "maxpool"]:
+            if module_def["type"] in ["convolutional", "upsample", "maxpool", "dep_sep_convolutional"]:
                 x = module(x)
             elif module_def["type"] == "route":
                 x = torch.cat([layer_outputs[int(layer_i)] for layer_i in module_def["layers"].split(",")], 1)
