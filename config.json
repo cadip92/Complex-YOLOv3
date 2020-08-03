@@ -7,5 +7,5 @@
   "n_cpu": 8,
   "evaluation_interval": 2,
   "multiscale_training": true,
-  "checkpoint_file": "checkpoints/yolov3_ckpt.pth"
+  "checkpoint_file": "checkpoints/dep_sep_ckpt.pth"
 }
