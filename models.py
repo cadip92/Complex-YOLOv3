@@ -46,11 +46,12 @@ def create_modules(module_defs):
             filters = int(module_def["filters"])
             kernel_size = int(module_def["size"])
             pad = (kernel_size - 1) // 2
+            width_mul = module_def["width_mul"]         # Adding additional hyper-parameter width_multiplier for mobile_nets
             # Depth-wise Convolution
             modules.add_module(f"dep_conv_{module_i}",
                                nn.Conv2d(
                                    in_channels=output_filters[-1],
-                                   out_channels=output_filters[-1],
+                                   out_channels=int(round(output_filters[-1] * width_mul)),# output filters = input_filters * width_multiplier
                                    kernel_size=kernel_size,
                                    stride=int(module_def["stride"]),
                                    padding=pad,
