@@ -46,7 +46,7 @@ def create_modules(module_defs):
             filters = int(module_def["filters"])
             kernel_size = int(module_def["size"])
             pad = (kernel_size - 1) // 2
-            width_mul = module_def["width_mul"]         # Adding additional hyper-parameter width_multiplier for mobile_nets
+            width_mul = float(module_def["width_mul"])         # Adding additional hyper-parameter width_multiplier for mobile_nets
             # Depth-wise Convolution
             modules.add_module(f"dep_conv_{module_i}",
                                nn.Conv2d(
