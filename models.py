@@ -61,7 +61,7 @@ def create_modules(module_defs):
                                )
             if bn:
                 modules.add_module(f"batch_norm_d_{module_i}",
-                                   nn.BatchNorm2d(output_filters[-1],
+                                   nn.BatchNorm2d(int(round(output_filters[-1] * width_mul)),
                                    momentum=0.9,
                                    eps=1e-5))
 
