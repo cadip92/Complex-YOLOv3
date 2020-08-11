@@ -1,0 +1,27 @@
+Complex_yolo_v3 = 62.5M
+mAP : ~85-86%
+
+------------------------------------------------------------------------
+######## Dep_sep_conv
+# Parameters dep_sep_v1 : 12.5M
+>>>>> All the 3*3 conv replaced with dep_sep conv
+(best)
+mAP : ~84%
+
+
+------------------------------------------------------------------------
+######## Mobile_net
+# Parameters mobilenet_v1 : 7.83M
+>>>>> vanilla arch : Mobile_net. All 3*3 conv before yolo_layer replaced with dep_sep conv
+(best)
+mAP : ~80%
+
+# Parameters mobilenet_v1.1 : 4.95M
+>>>>>> vanilla arch : Mobile_net. All the conv before yolo_layer replaced with only dep_sep conv
+(best)
+mAP : Very high loss
+
+# Parameters mobilenet_v1.2 : 24.2M
+>>>>>> vanilla arch : Mobile_net. Conv before yolo_layer are same as in yolov3
+(best)
+mAP : ~83%
