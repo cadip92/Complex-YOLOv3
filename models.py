@@ -59,7 +59,7 @@ def create_modules(module_defs):
                                    stride=int(module_def["stride"]),
                                    padding=pad,
                                    bias=not bn,
-                                   groups=output_filters[-1],
+                                   groups=dep_out_filters,
                                ),
                                )
             if bn:
