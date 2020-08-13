@@ -25,3 +25,9 @@ mAP : Very high loss
 >>>>>> vanilla arch : Mobile_net. Conv before yolo_layer are same as in yolov3
 (best)
 mAP : ~83%
+
+
+# Parameters mobilenet_v2 : 5.76M (16.03M)
+>>>>>> vanilla arch : Mobile_net_v2. 3*3 Conv before yolo_layer are replaced with dep_sep conv
+(best)
+mAP : 
