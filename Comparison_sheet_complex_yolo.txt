@@ -8,7 +8,6 @@ mAP : ~85-86%
 (best)
 mAP : ~84%
 
-
 ------------------------------------------------------------------------
 ######## Mobile_net
 # Parameters mobilenet_v1 : 7.83M
@@ -33,7 +32,13 @@ mAP : ~83%
 mAP : 74.75%
 
 
-# Parameters mobilenet_v2 : 15.61M
+# Parameters mobilenet_v2.1 : 15.61M
 >>>>>> vanilla arch : Mobile_net_v2.1. No.of filters modified for conv before yolo_layer
 (best)
 mAP : 66.62% (This means that it is very important to have lot of filters before the YOLO layers)
+
+# Parameters mobilenet_v2.2 : 13.91M
+>>>>>> vanilla arch : Mobile_net_v2.2(Modified the no.of layers in Bottleneck). No.of filters for conv before yolo_layer same as mobilenet_v2
+(best)
+mAP : ~80%
+------------------------------------------------------------------------
