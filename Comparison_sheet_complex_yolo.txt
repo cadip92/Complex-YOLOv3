@@ -41,4 +41,14 @@ mAP : 66.62% (This means that it is very important to have lot of filters before
 >>>>>> vanilla arch : Mobile_net_v2.2(Modified the no.of layers in Bottleneck). No.of filters for conv before yolo_layer same as mobilenet_v2
 (best)
 mAP : ~80%
+
+# Parameters mobilenet_v2.3 : 8.47M
+>>>>>> vanilla arch : Mobile_net_v2.3(Halved (hyper-param 't') no.of filters in Bottleneck). No.of filters for conv before yolo_layer same as mobilenet_v2
+(best)
+mAP : 78.14%
+
+# Parameters mobilenet_v2.4 : 5.70M
+>>>>>> vanilla arch : Mobile_net_v2.3(Reduced (hyper-param 't' = 1) no.of filters in Bottleneck). No.of filters for conv before yolo_layer same as mobilenet_v2
+(best)
+mAP : 73.66%
 ------------------------------------------------------------------------
