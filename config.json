@@ -2,10 +2,11 @@
   "epochs": 100,
   "batch_size": 5,
   "gradient_accumulations": 2,
-  "model_def": "config/mobile_yolov3.cfg",
+  "learning_rate": 0.01,
+  "model_def": "config/mobile_v2.5_yolov3.cfg",
   "pretrained_weights": "",
   "n_cpu": 8,
   "evaluation_interval": 2,
   "multiscale_training": true,
-  "checkpoint_file": "checkpoints/mobile_yolov3.pth"
+  "checkpoint_file": "checkpoints/mobile_v2.5.1_yolov3.pth"
 }

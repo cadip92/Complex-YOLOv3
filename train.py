@@ -83,7 +83,8 @@ if __name__ == "__main__":
         collate_fn=dataset.collate_fn
     )
 
-    optimizer = optim.Adam(model.parameters())
+    optimizer = optim.Adam(model.parameters(),
+                           lr=FLAGS.learning_rate)
 
     metrics = [
         "grid_size",
