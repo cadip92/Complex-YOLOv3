@@ -56,4 +56,9 @@ mAP : 73.66%
 >>>>>> vanilla arch : Mobile_net_v2.5(Reduced height and width of layers in bottleneck(combi of v2.2 and v2.3)). No.of filters for conv before yolo_layer same as mobilenet_v2
 (best)
 mAP : ~78%
+
+# Parameters mobilenet_v2.5.1 : 7.79M
+>>>>>> Only learning rate modified
+(best)
+mAP : ~70%
 ------------------------------------------------------------------------
