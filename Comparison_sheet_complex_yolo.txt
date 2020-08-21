@@ -62,3 +62,30 @@ mAP : ~78%
 (best)
 mAP : ~70%
 ------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+######## Pelee_Net
+# Parameters peleenet_v1 : 22.13M
+>>>>> vanilla arch : Pelee_net. All conv before yolo_layer same as yolov3 (YOLO features extracted before avg pool layer, Stage 4 doesn't have avgpool)
+(best)
+mAP : 83.35%
+
+# Parameters peleenet_v1.1 : 22.12M
+>>>>> vanilla arch : No Stem block, just one conv 3*3. All conv before yolo_layer same as yolov3 (YOLO features extracted after avg pool layer, Stage 4 has avgpool)
+(best)
+mAP : 
+
+# Parameters peleenet_v1.1.1 : 
+>>>>> vanilla arch : No Stem block, just one conv 3*3. All 3*3 conv before YOLO layer is dep_sep. (YOLO features extracted after avg pool layer, Stage 4 has avgpool)
+(best)
+mAP : 
+
+# Parameters peleenet_v1.2 : 
+>>>>> vanilla arch : No Stem block, just one conv 3*3 [block_config = 1]. All conv before yolo_layer same as yolov3. (YOLO features extracted after avg pool layer, Stage 4 has avgpool)
+(best)
+mAP : 
+
+# Parameters peleenet_v1.2.1 : 
+>>>>> vanilla arch : No Stem block, just one conv 3*3. block_config = 1. All 3*3 conv before YOLO layer is dep_sep. (YOLO features extracted after avg pool layer, Stage 4 has avgpool)
+(best)
+mAP : 
