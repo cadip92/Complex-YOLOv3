@@ -8,5 +8,8 @@
   "n_cpu": 8,
   "evaluation_interval": 2,
   "multiscale_training": true,
-  "checkpoint_file": "checkpoints/mobile_v2.5.1_yolov3.pth"
+  "checkpoint_file": "checkpoints/mobile_v2.5.1_yolov3.pth",
+  "iou_thres": 0.5,
+  "conf_thres": 0.5,
+  "nms_thres": 0.5
 }
