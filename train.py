@@ -170,9 +170,9 @@ if __name__ == "__main__":
             # Evaluate the model on the validation set
             precision, recall, AP, f1, ap_class = evaluate(
                 model,
-                iou_thres=0.5,
-                conf_thres=0.5,
-                nms_thres=0.5,
+                iou_thres=FLAGS.iou_thres,
+                conf_thres=FLAGS.conf_thres,
+                nms_thres=FLAGS.nms_thres,
                 img_size=cnf.BEV_WIDTH,
                 batch_size=8,
             )
