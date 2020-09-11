@@ -2,8 +2,11 @@ from __future__ import division
 
 from models import *
 from utils.utils import *
+from easydict import EasyDict as edict
+from pprint import pprint
+from terminaltables import AsciiTable
 
-import os, sys, time, datetime, argparse
+import os, sys, time, datetime, argparse, json
 import tqdm
 
 import torch
@@ -27,64 +30,100 @@ def evaluate(model, iou_thres, conf_thres, nms_thres, img_size, batch_size):
     Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
 
     labels = []
+    label_levels = []
     sample_metrics = []  # List of tuples (TP, confs, pred)
-    for batch_i, (_, imgs, targets) in enumerate(tqdm.tqdm(dataloader, desc="Detecting objects")):
+    avg_inference_time = []
+    for batch_i, (_, imgs, targets, cls_level) in enumerate(tqdm.tqdm(dataloader, desc="Detecting objects")):
 
         # Extract labels
         labels += targets[:, 1].tolist()
+        # Make a list of levels of the corresponding labels
+        label_levels += cls_level[0].tolist()
         # Rescale target
         targets[:, 2:] *= img_size
 
         imgs = Variable(imgs.type(Tensor), requires_grad=False)
 
         with torch.no_grad():
+            start_eval = time.time() # Prediction started
             outputs = model(imgs)
             outputs = non_max_suppression_rotated_bbox(outputs, conf_thres=conf_thres, nms_thres=nms_thres)
+            end_eval = time.time() # Prediction ended
+            inference_time = int(round(end_eval - start_eval) * 1000)
+            avg_inference_time.append(inference_time)
 
-        sample_metrics += get_batch_statistics_rotated_bbox(outputs, targets, iou_threshold=iou_thres)
+        sample_metrics += get_batch_statistics_rotated_bbox(outputs, targets, label_levels, iou_threshold=iou_thres)
 
     # Concatenate sample statistics
-    true_positives, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
-    precision, recall, AP, f1, ap_class = ap_per_class(true_positives, pred_scores, pred_labels, labels)
+    true_positives, pred_scores, pred_labels, pred_levels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
+    eval_per_class = ap_per_class(true_positives, pred_scores, pred_labels, pred_levels, labels, np.array(label_levels))
+    print("Average inference time is %.2f ms" % np.mean(avg_inference_time))
 
-    return precision, recall, AP, f1, ap_class
+    return eval_per_class
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--batch_size", type=int, default=10, help="size of each image batch")
-    parser.add_argument("--model_def", type=str, default="config/complex_tiny_yolov3.cfg", help="path to model definition file")
-    parser.add_argument("--weights_path", type=str, default="checkpoints/tiny-yolov3_ckpt_epoch-220.pth", help="path to weights file")
-    parser.add_argument("--class_path", type=str, default="data/classes.names", help="path to class label file")
-    parser.add_argument("--iou_thres", type=float, default=0.5, help="iou threshold required to qualify as detected")
-    parser.add_argument("--conf_thres", type=float, default=0.5, help="object confidence threshold")
-    parser.add_argument("--nms_thres", type=float, default=0.5, help="iou thresshold for non-maximum suppression")
-    parser.add_argument("--img_size", type=int, default=cnf.BEV_WIDTH, help="size of each image dimension")
-    opt = parser.parse_args()
-    print(opt)
+
+    parser.add_argument('--config', default=None, type=str, help='Configuration file')
+    parser = parser.parse_args()
+
+    try:
+        if parser.config is not None:
+            with open(parser.config, 'r') as config_file:
+                config_args_dict = json.load(config_file)
+        else:
+            print("Add a config file using \'--config file_name.json\'", file=sys.stderr)
+            exit(1)
+
+    except FileNotFoundError:
+        print("ERROR: Config file not found: {}".format(parser.config), file=sys.stderr)
+        exit(1)
+    except json.decoder.JSONDecodeError:
+        print("ERROR: Config file is not a proper JSON file!", file=sys.stderr)
+        exit(1)
+
+    FLAGS = edict(config_args_dict)
+
+    if FLAGS.checkpoint_file == "":
+        print("ERROR: Checkpoint file is not specified", file=sys.stderr)
+        exit(1)
+
+    pprint(FLAGS)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    #data_config = parse_data_config(opt.data_config)
-    #class_names = load_classes(data_config["names"])
-    class_names = load_classes(opt.class_path)
+    class_names = load_classes("data/classes.names")
 
     # Initiate model
-    model = Darknet(opt.model_def).to(device)
+    model = Darknet(FLAGS.model_def).to(device)
     # Load checkpoint weights
-    model.load_state_dict(torch.load(opt.weights_path))
+    model.load_state_dict(torch.load(FLAGS.checkpoint_file))
 
     print("Compute mAP...")
-    precision, recall, AP, f1, ap_class = evaluate(
+    eval_per_class = evaluate(
         model,
-        iou_thres=opt.iou_thres,
-        conf_thres=opt.conf_thres,
-        nms_thres=opt.nms_thres,
-        img_size=opt.img_size,
-        batch_size=opt.batch_size,
+        iou_thres=FLAGS.iou_thres,
+        conf_thres=FLAGS.conf_thres,
+        nms_thres=FLAGS.nms_thres,
+        img_size=cnf.BEV_WIDTH,
+        batch_size=FLAGS.batch_size,
     )
 
     print("Average Precisions:")
-    for i, c in enumerate(ap_class):
+
+    ap_table = [["Level", "Class name", "AP"]]
+    for lev in eval_per_class :
+        for cls in lev :
+            r = eval_per_class[lev][cls]['']
+            p = eval_per_class[lev][cls][0]
+            ap = eval_per_class[lev][cls][0]
+            f1 = eval_per_class[lev][cls][0]
+
+            ap_table += [[lev, cls, ap]]
+
+    print(AsciiTable(ap_table).table)
+
+    '''for i, c in enumerate(ap_class):
         print(f"+ Class '{c}' ({class_names[c]}) - AP: {AP[i]}")
 
-    print(f"mAP: {AP.mean()}")
+    print(f"mAP: {AP.mean()}")'''

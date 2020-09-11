@@ -88,8 +88,8 @@ class KittiYOLODataset(KittiDataset):
             objects = self.get_label(sample_id)   
             calib = self.get_calib(sample_id)
 
-            labels, noObjectLabels = bev_utils.read_labels_for_bevbox(objects)
-    
+            labels, cls_level, noObjectLabels = bev_utils.read_labels_for_bevbox(objects)
+
             if not noObjectLabels:
                 labels[:, 1:] = augUtils.camera_to_lidar_box(labels[:, 1:], calib.V2C, calib.R0, calib.P)  # convert rect cam to velo cord
 
@@ -98,7 +98,7 @@ class KittiYOLODataset(KittiDataset):
 
             b = bev_utils.removePoints(lidarData, cnf.boundary)
             rgb_map = bev_utils.makeBVFeature(b, cnf.DISCRETIZATION, cnf.boundary)
-            target = bev_utils.build_yolo_target(labels)
+            target, levels = bev_utils.build_yolo_target(labels, cls_level)
             img_file = os.path.join(self.image_path, '%06d.png' % sample_id)
 
             ntargets = 0
@@ -116,7 +116,7 @@ class KittiYOLODataset(KittiDataset):
                 if np.random.random() < 0.5:
                     img, targets = self.horisontal_flip(img, targets)
 
-            return img_file, img, targets
+            return img_file, img, targets, levels
 
         else:
             lidarData = self.get_lidar(sample_id)
@@ -126,7 +126,7 @@ class KittiYOLODataset(KittiDataset):
             return img_file, rgb_map
 
     def collate_fn(self, batch):
-        paths, imgs, targets = list(zip(*batch))
+        paths, imgs, targets, cls_level = list(zip(*batch))
         # Remove empty placeholder targets
         targets = [boxes for boxes in targets if boxes is not None]
         # Add sample index to targets
@@ -139,7 +139,7 @@ class KittiYOLODataset(KittiDataset):
         # Resize images to input shape
         imgs = torch.stack([resize(img, self.img_size) for img in imgs])
         self.batch_count += 1
-        return paths, imgs, targets
+        return paths, imgs, targets, cls_level
 
     def horisontal_flip(self, images, targets):
         images = torch.flip(images, [-1])

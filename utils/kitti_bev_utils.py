@@ -67,18 +67,20 @@ def makeBVFeature(PointCloud_, Discretization, bc):
 
 def read_labels_for_bevbox(objects):
     bbox_selected = []
+    class_lvl_selected = []
     for obj in objects:
         if obj.cls_id != -1:
             bbox = []
             bbox.append(obj.cls_id)
+            class_lvl_selected.append(obj.level_str)
             bbox.extend([obj.t[0], obj.t[1], obj.t[2], obj.h, obj.w, obj.l, obj.ry])
             bbox_selected.append(bbox)
     
     if (len(bbox_selected) == 0):
-        return np.zeros((1, 8), dtype=np.float32), True
+        return np.zeros((1, 8), dtype=np.float32), np.array(['no_obj']), True
     else:
         bbox_selected = np.array(bbox_selected).astype(np.float32)
-        return bbox_selected, False
+        return bbox_selected, np.array(class_lvl_selected), False
 
 # bev image coordinates format
 def get_corners(x, y, w, l, yaw):
@@ -102,9 +104,10 @@ def get_corners(x, y, w, l, yaw):
 
     return bev_corners
 
-def build_yolo_target(labels):
+def build_yolo_target(labels, cls_level):
     bc = cnf.boundary
     target = np.zeros([50, 7], dtype=np.float32)
+    levels = []
     
     index = 0
     for i in range(labels.shape[0]):
@@ -129,9 +132,12 @@ def build_yolo_target(labels):
             target[index][5] = math.sin(float(yaw))
             target[index][6] = math.cos(float(yaw))
 
+            # Add the level for the label that satisfies the above conditions
+            levels.append(cls_level[index])
+
             index = index+1
 
-    return target
+    return target, np.array(levels)
 
 def inverse_yolo_target(targets, bc):
     ntargets = 0

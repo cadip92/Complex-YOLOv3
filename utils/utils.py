@@ -18,7 +18,7 @@ def convert_format(boxes_array):
     polygons = [Polygon([(box[i, 0], box[i, 1]) for i in range(4)]) for box in boxes_array]
     return np.array(polygons)
 
-def compute_iou(box, boxes):
+def  compute_iou(box, boxes):
     """Calculates IoU of the given box with the array of the given boxes.
     box: a polygon
     boxes: a vector of polygons
@@ -86,7 +86,7 @@ def rescale_boxes(boxes, current_dim, original_shape):
 
     return boxes
 
-def ap_per_class(tp, conf, pred_cls, target_cls):
+def ap_per_class(t_p, confidence, pred_class, level, target_class, target_level):
     """ Compute the average precision, given the recall and precision curves.
     Source: https://github.com/rafaelpadilla/Object-Detection-Metrics.
     # Arguments
@@ -98,47 +98,69 @@ def ap_per_class(tp, conf, pred_cls, target_cls):
         The average precision as computed in py-faster-rcnn.
     """
 
-    # Sort by objectness
-    i = np.argsort(-conf)
-    tp, conf, pred_cls = tp[i], conf[i], pred_cls[i]
+    eval_per_level = {}
 
-    # Find unique classes
-    unique_classes = np.unique(target_cls)
+    # Evaluate the performance for each level
+    for lev in ['Easy', 'Moderate', 'Hard', 'Unknown'] :
+        tp_l, conf_l, pred_cls_l, target_cls_l = [], [], [], []
 
-    # Create Precision-Recall curve and compute AP for each class
-    ap, p, r = [], [], []
-    for c in tqdm.tqdm(unique_classes, desc="Computing AP"):
-        i = pred_cls == c
-        n_gt = (target_cls == c).sum()  # Number of ground truth objects
-        n_p = i.sum()  # Number of predicted objects
+        idx_p = np.where(level == lev)[0]
+        idx_t = np.where(target_level == lev)[0]
 
-        if n_p == 0 and n_gt == 0:
-            continue
-        elif n_p == 0 or n_gt == 0:
-            ap.append(0)
-            r.append(0)
-            p.append(0)
-        else:
-            # Accumulate FPs and TPs
-            fpc = (1 - tp[i]).cumsum()
-            tpc = (tp[i]).cumsum()
+        for i in idx_p :
+            tp_l.append(t_p[i])
+            conf_l.append(confidence[i])
+            pred_cls_l.append(pred_class[i])
 
-            # Recall
-            recall_curve = tpc / (n_gt + 1e-16)
-            r.append(recall_curve[-1])
+        for i in idx_t :
+            target_cls_l.append(target_class[i])
 
-            # Precision
-            precision_curve = tpc / (tpc + fpc)
-            p.append(precision_curve[-1])
+        tp_l_a = np.array(tp_l)
+        conf_l_a = np.array(conf_l)
+        pred_cls_l_a = np.array(pred_cls_l)
+        target_cls_l_a = np.array(target_cls_l)
 
-            # AP from recall-precision curve
-            ap.append(compute_ap(recall_curve, precision_curve))
+        # Sort by objectness
+        i = np.argsort(-conf_l_a)
+        tp, conf, pred_cls = tp_l_a[i], conf_l_a[i], pred_cls_l_a[i]
 
-    # Compute F1 score (harmonic mean of precision and recall)
-    p, r, ap = np.array(p), np.array(r), np.array(ap)
-    f1 = 2 * p * r / (p + r + 1e-16)
+        # Find unique classes
+        unique_classes = np.unique(target_cls_l)
 
-    return p, r, ap, f1, unique_classes.astype("int32")
+        # Create Precision-Recall curve and compute AP for each class
+        eval_per_level[lev] = {}
+        for c in tqdm.tqdm(unique_classes, desc="Computing AP"):
+            i = pred_cls == c
+            n_gt = (target_cls_l_a == c).sum()  # Number of ground truth objects
+            n_p = i.sum()  # Number of predicted objects
+
+            if n_p == 0 and n_gt == 0:
+                continue
+            elif n_p == 0 or n_gt == 0:
+                ap_l = 0
+                r_l = 0
+                p_l = 0
+            else:
+                # Accumulate FPs and TPs
+                fpc = (1 - tp[i]).cumsum()
+                tpc = (tp[i]).cumsum()
+
+                # Recall
+                recall_curve = tpc / (n_gt + 1e-16)
+                r_l = recall_curve[-1]
+
+                # Precision
+                precision_curve = tpc / (tpc + fpc)
+                p_l = precision_curve[-1]
+
+                # AP from recall-precision curve
+                ap_l = compute_ap(recall_curve, precision_curve)
+
+            f1_l = 2 * p_l * r_l / (p_l + r_l + 1e-16)
+
+            eval_per_level[lev][c] = [r_l, p_l, ap_l, f1_l]
+
+    return eval_per_level
 
 def compute_ap(recall, precision):
     """ Compute the average precision, given the recall and precision curves.
@@ -167,9 +189,11 @@ def compute_ap(recall, precision):
     ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
     return ap
 
-def get_batch_statistics_rotated_bbox(outputs, targets, iou_threshold):
+def get_batch_statistics_rotated_bbox(outputs, targets, levels, iou_threshold):
     """ Compute true positives, predicted scores and predicted labels per sample """
     batch_metrics = []
+    pred_level = []
+
     for sample_i in range(len(outputs)):
 
         if outputs[sample_i] is None:
@@ -184,6 +208,7 @@ def get_batch_statistics_rotated_bbox(outputs, targets, iou_threshold):
 
         annotations = targets[targets[:, 0] == sample_i][:, 1:]
         target_labels = annotations[:, 0] if len(annotations) else []
+        levels_sample = levels[len(levels)-targets.shape[0]:]
         if len(annotations):
             detected_boxes = []
             target_boxes = annotations[:, 1:]
@@ -191,8 +216,8 @@ def get_batch_statistics_rotated_bbox(outputs, targets, iou_threshold):
             for pred_i, (pred_box, pred_label) in enumerate(zip(pred_boxes, pred_labels)):
 
                 # If targets are found break
-                if len(detected_boxes) == len(annotations):
-                    break
+                #if len(detected_boxes) == len(annotations):
+                #    break
 
                 # Ignore if label is not one of the target labels
                 if pred_label not in target_labels:
@@ -201,11 +226,13 @@ def get_batch_statistics_rotated_bbox(outputs, targets, iou_threshold):
                 #iou, box_index = rotated_bbox_iou(pred_box.unsqueeze(0), target_boxes, 1.0, False).squeeze().max(0)
                 ious = rotated_bbox_iou_polygon(pred_box, target_boxes)
                 iou, box_index = torch.from_numpy(ious).max(0)
+                pred_level.append(levels_sample[box_index])
 
                 if iou >= iou_threshold and box_index not in detected_boxes:
                     true_positives[pred_i] = 1
                     detected_boxes += [box_index]
-        batch_metrics.append([true_positives, pred_scores, pred_labels])
+
+        batch_metrics.append([true_positives, pred_scores, pred_labels, pred_level])
     return batch_metrics
 
 def rotated_box_wh_iou_polygon(anchor, wh, imre):

@@ -111,7 +111,7 @@ if __name__ == "__main__":
         start_time = time.time()
 
         # Print batch progress as a Progress Bar
-        for batch_i, (_, imgs, targets) in enumerate(tqdm.tqdm(dataloader, desc="Training for epoch %d started" %epoch)):
+        for batch_i, (_, imgs, targets, _) in enumerate(tqdm.tqdm(dataloader, desc="Training for epoch %d started" %epoch)):
             batches_done = len(dataloader) * epoch + batch_i
 
             imgs = Variable(imgs.to(device))
