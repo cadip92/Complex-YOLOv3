@@ -198,7 +198,6 @@ def get_batch_statistics_rotated_bbox(outputs, targets, iou_threshold):
                 if pred_label not in target_labels:
                     continue
 
-                #iou, box_index = rotated_bbox_iou(pred_box.unsqueeze(0), target_boxes, 1.0, False).squeeze().max(0)
                 ious = rotated_bbox_iou_polygon(pred_box, target_boxes)
                 iou, box_index = torch.from_numpy(ious).max(0)
 
