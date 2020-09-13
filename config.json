@@ -1,14 +1,13 @@
 {
   "epochs": 100,
-  "batch_size": 5,
+  "batch_size": 2,
   "gradient_accumulations": 2,
-  "learning_rate": 0.01,
-  "model_def": "config/mobile_v2.5_yolov3.cfg",
-  "pretrained_weights": "",
+  "learning_rate": 0.001,
+  "model_def": "config/dep_sep_v1.cfg",
   "n_cpu": 8,
   "evaluation_interval": 2,
   "multiscale_training": true,
-  "checkpoint_file": "checkpoints/mobile_v2.5.1_yolov3.pth",
+  "checkpoint_file": "checkpoints/dep_sep_v1.pth",
   "iou_thres": 0.5,
   "conf_thres": 0.5,
   "nms_thres": 0.5
