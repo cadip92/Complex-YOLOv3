@@ -168,14 +168,11 @@ if __name__ == "__main__":
         if epoch % FLAGS.evaluation_interval == 0:
             print("\n---- Evaluating Model ----")
             # Evaluate the model on the validation set
-            precision, recall, AP, f1, ap_class = evaluate(
-                model,
-                iou_thres=FLAGS.iou_thres,
-                conf_thres=FLAGS.conf_thres,
-                nms_thres=FLAGS.nms_thres,
-                img_size=cnf.BEV_WIDTH,
-                batch_size=8,
-            )
+            precision, recall, AP, f1, ap_class, avg_pred_time, avg_det_time = evaluate(model, iou_thres=FLAGS.iou_thres,
+                                                                                        conf_thres=FLAGS.conf_thres,
+                                                                                        nms_thres=FLAGS.nms_thres,
+                                                                                        img_size=cnf.BEV_WIDTH,
+                                                                                        batch_size=8)
             evaluation_metrics = [
                 ("val_precision", precision.mean()),
                 ("val_recall", recall.mean()),
@@ -190,6 +187,8 @@ if __name__ == "__main__":
                 ap_table += [[c, class_names[c], "%.5f" % AP[i]]]
             print(AsciiTable(ap_table).table)
             print(f"---- mAP {AP.mean()}")
+            print("Average time for prediction and NMS is %.2f ms" % avg_pred_time)
+            print("Average total time for detection is %.2f ms" % avg_det_time)
 
             #if epoch % FLAGS.checkpoint_interval == 0:
             if AP.mean() > max_mAP:
