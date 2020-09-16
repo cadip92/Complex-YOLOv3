@@ -95,6 +95,10 @@ if __name__ == "__main__":
     # Load checkpoint weights
     model.load_state_dict(torch.load(FLAGS.checkpoint_file))
 
+    # No.of parameters in the model
+    pytorch_total_params = sum(p.numel() for p in model.parameters())
+    print("Total parameters : ", pytorch_total_params, " or ~%.2fM parameters" % (pytorch_total_params / 1000000.0))
+
     print("Compute mAP...")
     precision, recall, AP, f1, ap_class, avg_pred_time, avg_det_time = evaluate(model, iou_thres=FLAGS.iou_thres,
                                                                                 conf_thres=FLAGS.conf_thres,
