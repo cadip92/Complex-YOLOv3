@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
     pprint(FLAGS)
 
-    classes = utils.load_classes(FLAGS.class_path)
+    classes = utils.load_classes("data/classes.names")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Set up model
@@ -122,7 +122,7 @@ if __name__ == "__main__":
     # Eval mode
     model.eval()
     
-    dataset = KittiYOLODataset(cnf.root_dir, split=FLAGS.split, mode='TEST', folder=FLAGS.folder, data_aug=False)
+    dataset = KittiYOLODataset(cnf.root_dir, split=FLAGS.split, mode='TEST', folder="sampledata", data_aug=False)
     data_loader = torch_data.DataLoader(dataset, 1, shuffle=False)
 
     Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
@@ -173,8 +173,6 @@ if __name__ == "__main__":
         img2d = mview.show_image_with_boxes(img2d, objects_pred, calib, False)
 
         cv2.imwrite("test_%s.jpeg" % index, img2d)
-        #cv2.imshow("bev img", RGB_Map)
-        #cv2.imshow("img2d", img2d)
 
         if cv2.waitKey(0) & 0xFF == 27:
             break
