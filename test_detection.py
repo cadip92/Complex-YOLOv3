@@ -122,7 +122,7 @@ if __name__ == "__main__":
     # Eval mode
     model.eval()
     
-    dataset = KittiYOLODataset(cnf.root_dir, split=FLAGS.split, mode='TEST', folder="sampledata", data_aug=False)
+    dataset = KittiYOLODataset(cnf.root_dir, split="sample", mode='TEST', folder="sampledata", data_aug=False)
     data_loader = torch_data.DataLoader(dataset, 1, shuffle=False)
 
     Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
