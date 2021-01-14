@@ -1,3 +1,8 @@
 checkpoints/
 data/
-utils/
+utils/__pycache__/
+Test_results/
+Comparison_sheet_complex_yolo.txt
+eval_results_combined.xlsx
+test_detection.py
+.idea/
