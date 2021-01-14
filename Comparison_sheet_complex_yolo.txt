@@ -1,19 +1,26 @@
+Original Complex_yolo_v2
+Car mAP : 80.21%
+Ped mAP : 45.39%
+Cyc mAP : 65.33%
+mAP : 63.64%
+
+------------------------------------------------------------------------
 Complex_yolo_v3 = 62.5M
-mAP : ~85-86%
+mAP : 84.54%
 
 ------------------------------------------------------------------------
 ######## Dep_sep_conv
 # Parameters dep_sep_v1 : 12.5M
 >>>>> All the 3*3 conv replaced with dep_sep conv
 (best)
-mAP : ~84%
+mAP : 83.81%
 
 ------------------------------------------------------------------------
 ######## Mobile_net
 # Parameters mobilenet_v1 : 7.83M
 >>>>> vanilla arch : Mobile_net. All 3*3 conv before yolo_layer replaced with dep_sep conv
 (best)
-mAP : ~80%
+mAP : 80.34%
 
 # Parameters mobilenet_v1.1 : 4.95M
 >>>>>> vanilla arch : Mobile_net. All the conv before yolo_layer replaced with only dep_sep conv
@@ -89,3 +96,27 @@ mAP : ~81%
 >>>>> vanilla arch : No Stem block, just one conv 3*3. block_config = 1. All 3*3 conv before YOLO layer is dep_sep. (YOLO features extracted after avg pool layer, Stage 4 has avgpool)
 (best)
 mAP : 79.3%
+
+------------------------------------------------------------------------
+
+Highly Pareto optimal on laptop :
+
+Mobile_Complex_YOLOv1
+Mobile_Complex_YOLOv2.3
+Mobile_Complex_YOLOv2.4
+Pelee_Complex_YOLOv1.1.1
+Pelee_Complex_YOLOv1.2.1
+
+High Pareto optimal on laptop :
+
+Mobile_Complex_YOLOv2.2
+Mobile_Complex_YOLOv2.5
+
+------------------------------------------------------------------------
+
+Highly Pareto optimal on slarti :
+
+Mobile_Complex_YOLOv2.2
+Mobile_Complex_YOLOv2.5
+Pelee_Complex_YOLOv1.1.1
+Pelee_Complex_YOLOv1.2.1

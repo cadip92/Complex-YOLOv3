@@ -9,6 +9,8 @@ import utils.utils as utils
 from models import *
 import torch.utils.data as torch_data
 
+import thop
+
 import utils.kitti_utils as kitti_utils
 import utils.kitti_aug_utils as aug_utils
 import utils.kitti_bev_utils as bev_utils
@@ -119,10 +121,19 @@ if __name__ == "__main__":
     model = Darknet(FLAGS.model_def, img_size=cnf.BEV_WIDTH).to(device)
     # Load checkpoint weights
     model.load_state_dict(torch.load(FLAGS.checkpoint_file))
+    
+    ## Calculating Flops & params for the model
+    input = torch.cuda.FloatTensor(1,3,608,608).normal_()
+    flops, params = thop.profile(model, inputs=(input, ))
+    flops, params = thop.clever_format([flops, params], "%.3f")
+    print("FLOPS : ", flops)
+    print("params : ", params)
+    ##
+    
     # Eval mode
     model.eval()
     
-    dataset = KittiYOLODataset(cnf.root_dir, split="sample", mode='TEST', folder="sampledata", data_aug=False)
+    dataset = KittiYOLODataset(cnf.root_dir, split="test", mode='TEST', folder="testing", data_aug=False)
     data_loader = torch_data.DataLoader(dataset, 1, shuffle=False)
 
     Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
