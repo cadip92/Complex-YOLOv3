@@ -130,7 +130,7 @@ if __name__ == "__main__":
     print("params : ", params)
     ##
     
-    # Eval mode
+    ## Eval mode
     model.eval()
     
     dataset = KittiYOLODataset(cnf.root_dir, split="test", mode='TEST', folder="testing", data_aug=False)

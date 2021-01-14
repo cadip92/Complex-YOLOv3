@@ -13,7 +13,7 @@ CLASS_NAME_TO_ID = {
 	'Person_sitting': 	1,
 }
 
-# Front side (of vehicle) Point Cloud boundary for BEV
+# Front side (of vehicle) Point Cloud boundary for BEV #
 boundary = {
     "minX": 0,
     "maxX": 50,
