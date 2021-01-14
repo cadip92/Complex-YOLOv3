@@ -89,10 +89,10 @@ Please refer 'eval_results_combined.xlsx' for the full evaluation results.
 	2. $ python test_detection.py --config=config.json
 
 #### Results 
-<p align="center"><img src="assets/result_1.jpg" width="1246"\></p>
-<p align="center"><img src="assets/result_2.jpg" width="1246"\></p>
-<p align="center"><img src="assets/result_3.jpg" width="1246"\></p>
-<p align="center"><img src="assets/result_4.jpg" width="1246"\></p>
+<p align="center"><img src="assets/result_1.jpeg" width="1246"\></p>
+<p align="center"><img src="assets/result_2.jpeg" width="1246"\></p>
+<p align="center"><img src="assets/result_3.jpeg" width="1246"\></p>
+<p align="center"><img src="assets/result_4.jpeg" width="1246"\></p>
 
 ## Credit
 
