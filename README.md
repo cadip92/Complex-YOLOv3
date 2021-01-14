@@ -1,28 +1,21 @@
 # Complex-YOLO-V3
-Complete but Unofficial PyTorch Implementation of [Complex-YOLO: Real-time 3D Object Detection on Point Clouds](https://arxiv.org/pdf/1803.06199.pdf) with YoloV3
+Complete PyTorch Implementation of my thesis "Single-stage object detection for 3D point clouds". This code is developed on the baseline [Complex-YOLO: Real-time 3D Object Detection on Point Clouds](https://arxiv.org/pdf/1803.06199.pdf). The original paper was an extension of YOLOv2 whereas for the thesis, Complex-YOLO is extended on YOLOv3.
+
+As a part of my thesis, I developed 14 different models and compared their performances on the original KITTI dataset. The models were developed by modifying the feature extraction layers of the network as well as the layers in the YOLO network. The modifications are influenced by depthwise separable convolutions, MobileNet and PeleeNet.
+
+The architectures can broadly be classified into 5 categories :
+
+1. complex_yolov3   : Complex-YOLO extended on YOLOv3.
+2. dep_sep		    : The 3x3 convolution layers are replaced with 3x3 depthwise separable convolution layers.
+3. mobile_v1_yolov3 : MobileNet v1 is used as a feature extractor for the model. The subsequent versions involve hyper-parameter tuning.
+4. mobile_v2_yolov3 : MobileNet v2 is used as a feature extractor for the model. The subsequent versions involve hyper-parameter tuning.
+5. pelee_v1_yolov3 : PeleeNet is used as a feature extractor for the model. The subsequent versions involve hyper-parameter tuning.
 
 ## Installation
 #### Clone the project and install requirements
-    $ git clone https://github.com/ghimiredhikura/Complex-YOLOv3
+    $ git clone https://github.com/cadip92/Complex-YOLOv3
     $ cd Complex-YOLO-V3/
-    $ sudo pip install -r requirements.txt
-
-## Quickstart
-
-#### Download pretrained weights [[yolov3](https://drive.google.com/file/d/1e7PCqeV3tS68KtBIUbX34Uhy81XnsYZV/view), [tiny-yolov3](https://drive.google.com/file/d/19Qvpq2kQyjQ5uhQgi-wcWmSqFy4fcvny/view)]
-    $ cd checkpoints/
-    $ python download_weights.py
-    
-#### Test [without downloading dataset] 
-
-    1. $ python test_detection.py --split=sample --folder=sampledata  
-    2. $ python test_both_side_detection.py --split=sample --folder=sampledata
-
-#### Demo Video [[Click to Play](https://www.youtube.com/watch?v=JzywsbuXFOg)]
-[![complex-yolov3_gif][complex-yolov3_gif]](https://youtu.be/JzywsbuXFOg)
-
-[//]: # (Image References)
-[complex-yolov3_gif]: ./assets/complex-yolov3.gif
+    $ conda <env_name> create -f environment.yml
 
 ## Data Preparation
 
@@ -51,21 +44,15 @@ Now you have to manage dataset directory structure. Place your dataset into `dat
 
 The `train/valid` split of training dataset as well as `sample` and `test` dataset ids are in `data/KITTI/ImageSets` directory. From training set of 7481 images, 6000 images are used for training and remaining 1481 images are used for validation. The mAP results reported in this project are evaluated into this valid set with custom mAP evaluation script with 0.5 iou for each object class. 
 
-#### Verify your download
-    $ python check_dataset.py
-
 ## Train
-    $ train.py [-h] [--epochs EPOCHS] [--batch_size BATCH_SIZE]
-                [--gradient_accumulations GRADIENT_ACCUMULATIONS]
-                [--model_def MODEL_DEF] 
-                [--pretrained_weights PRETRAINED_WEIGHTS] 
-                [--n_cpu N_CPU] [--img_size IMG_SIZE]
-                [--evaluation_interval EVALUATION_INTERVAL]
-                [--multiscale_training MULTISCALE_TRAINING]
+
+Modify the "model_def" and "checkpoint_file" in the config.json file before execution. For e.g. "config/complex_yolov3.cfg" is the model configuration file for Complex YOLO v3. The config files are available in the 'config' directory. The checkpoints for previously trained models are available in the 'checkpoints' file.
+
+    $ python train.py --config config.json
 
 --Training log example--
 
-    ---- [Epoch 0/300, Batch 250/1441] ----  
+    ---- [Epoch 0/150, Batch 250/1441] ----  
     +------------+--------------+--------------+--------------+  
     | Metrics    | YOLO Layer 0 | YOLO Layer 1 | YOLO Layer 2 |  
     +------------+--------------+--------------+--------------+  
@@ -89,32 +76,27 @@ The `train/valid` split of training dataset as well as `sample` and `test` datas
     Total loss 16.255769729614258
     ---- ETA 0:18:27.490254
 
-## Test
-    $ python test_detection.py
-    $ python test_both_side_detection.py
-
 ## Evaluation
-    $ python eval_mAP.py 
+    $ python eval_mAP.py --config config.json
+	
+All the evaluation results are presented after training the models for 150 epochs.
 
-mAP (min. 50 IoU)
+Please refer 'eval_results_combined.xlsx' for the full evaluation results.
 
-| Model/Class             | Car     | Pedestrian | Cyclist | Average |
-| ----------------------- |:--------|:-----------|:--------|:--------|
-| Complex-YOLO-v3         | 97.89   |82.71       |90.12    |90.24    |
-| Complex-Tiny-YOLO-v3    | 95.91   |49.29       |78.75    |74.65    |
+#### Test the model on sample dataset
+
+    1. Update the 'model_def' in config.json file to the model that needs to be tested(provided in 'config' directory)
+	2. $ python test_detection.py --config=config.json
 
 #### Results 
-<p align="center"><img src="assets/result1.jpg" width="1246"\></p>
-<p align="center"><img src="assets/result2.jpg" width="1246"\></p>
-<p align="center"><img src="assets/result3.jpg" width="1246"\></p>
+<p align="center"><img src="assets/result_1.jpg" width="1246"\></p>
+<p align="center"><img src="assets/result_2.jpg" width="1246"\></p>
+<p align="center"><img src="assets/result_3.jpg" width="1246"\></p>
+<p align="center"><img src="assets/result_4.jpg" width="1246"\></p>
 
 ## Credit
 
 1. Complex-YOLO: https://arxiv.org/pdf/1803.06199.pdf
 
-YoloV3 Implementation is borrowed from:
-1. https://github.com/eriklindernoren/PyTorch-YOLOv3
-
-Point Cloud Preprocessing is based on:  
-1. https://github.com/skyhehe123/VoxelNet-pytorch
-2. https://github.com/dongwoohhh/MV3D-Pytorch
+The Complex-YOLOv3 repo was forked from:
+1. https://github.com/ghimiredhikura/Complex-YOLOv3
